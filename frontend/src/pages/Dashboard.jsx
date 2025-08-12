@@ -28,6 +28,14 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Navigation menu items
+  const navItems = [
+    { name: 'Simulation', path: '/simulation', icon: '', color: 'bg-blue-100 text-blue-800' },
+    { name: 'Orders', path: '/orders', icon: '', color: 'bg-green-100 text-green-800' },
+    { name: 'Routes', path: '/routes', icon: '', color: 'bg-purple-100 text-purple-800' },
+    { name: 'Drivers', path: '/drivers', icon: '', color: 'bg-yellow-100 text-yellow-800' },
+  ];
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -97,7 +105,7 @@ export default function Dashboard() {
     labels: stats ? Object.keys(stats.fuelCosts || {}) : [],
     datasets: [
       {
-        label: 'Fuel Cost (₹)',
+        label: 'Fuel Cost ()',
         data: stats ? Object.values(stats.fuelCosts || {}) : [],
         backgroundColor: [
           'rgba(54, 162, 235, 0.6)',
@@ -116,95 +124,107 @@ export default function Dashboard() {
     ],
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl font-semibold">Loading dashboard data...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl text-red-600">{error}</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Delivery Analytics Dashboard</h1>
-      
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Profit Card */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-gray-500 text-sm font-medium">Total Profit</h3>
-          <p className="mt-2 text-3xl font-bold text-green-600">
-            ₹{stats?.totalProfit?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) || '0.00'}
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            {stats?.lastUpdated ? `Updated: ${new Date(stats.lastUpdated).toLocaleString()}` : ''}
-          </p>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Navigation Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {navItems.map((item) => (
+            <a
+              key={item.name}
+              href={item.path}
+              className="block bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center">
+                <span className={`text-2xl p-3 rounded-lg mr-4 ${item.color}`}>
+                  {item.icon}
+                </span>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">{item.name} Management</h3>
+                  <p className="text-sm text-gray-500">Manage {item.name.toLowerCase()} data</p>
+                </div>
+                <svg 
+                  className="w-5 h-5 ml-auto text-gray-400" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M9 5l7 7-7 7" 
+                  />
+                </svg>
+              </div>
+            </a>
+          ))}
         </div>
 
-        {/* Efficiency Score Card */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-gray-500 text-sm font-medium">Efficiency Score</h3>
-          <p className="mt-2 text-3xl font-bold text-blue-600">
-            {stats?.efficiencyScore || 0}%
-          </p>
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mt-3">
-            <div 
-              className="bg-blue-600 h-2.5 rounded-full" 
-              style={{ width: `${stats?.efficiencyScore || 0}%` }}
-            ></div>
+        {/* Dashboard Stats and Charts */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-800">Dashboard Overview</h1>
+                <p className="text-gray-500 mt-1">Key metrics and analytics at a glance</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* On-time Deliveries Card */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-gray-500 text-sm font-medium">On-time Deliveries</h3>
-          <p className="mt-2 text-3xl font-bold text-green-500">
-            {stats?.onTime || 0}
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            {stats && stats.onTime && stats.late ? 
-              `${Math.round((stats.onTime / (stats.onTime + stats.late)) * 100)}% of total` : 
-              '0% of total'}
-          </p>
-        </div>
+          <div className="p-6">
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+                <p>{error}</p>
+              </div>
+            )}
 
-        {/* Late Deliveries Card */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-gray-500 text-sm font-medium">Late Deliveries</h3>
-          <p className="mt-2 text-3xl font-bold text-red-500">
-            {stats?.late || 0}
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            {stats && stats.onTime && stats.late ? 
-              `${Math.round((stats.late / (stats.onTime + stats.late)) * 100)}% of total` : 
-              '0% of total'}
-          </p>
-        </div>
-      </div>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Delivery Status Chart */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-800 mb-4">Delivery Status</h3>
+                  <div className="h-64">
+                    <Pie data={deliveryData} options={pieOptions} />
+                  </div>
+                </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* On-time vs Late Deliveries Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Delivery Performance</h3>
-          <div className="h-80">
-            <Pie data={deliveryData} options={pieOptions} />
-          </div>
-        </div>
+                {/* Fuel Costs Chart */}
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-800 mb-4">Fuel Costs by Vehicle Type</h3>
+                  <div className="h-64">
+                    <Bar data={fuelData} options={barOptions} />
+                  </div>
+                </div>
 
-        {/* Fuel Cost Breakdown Chart */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Fuel Cost Breakdown</h3>
-          <div className="h-80">
-            <Bar data={fuelData} options={barOptions} />
+                {/* Stats Cards */}
+                {stats && (
+                  <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-blue-50 p-6 rounded-lg">
+                      <h4 className="text-sm font-medium text-blue-800 uppercase tracking-wider">Total Deliveries</h4>
+                      <p className="mt-2 text-3xl font-semibold text-gray-900">{stats.totalDeliveries || 0}</p>
+                    </div>
+                    <div className="bg-green-50 p-6 rounded-lg">
+                      <h4 className="text-sm font-medium text-green-800 uppercase tracking-wider">On Time Rate</h4>
+                      <p className="mt-2 text-3xl font-semibold text-gray-900">
+                        {stats.onTimeRate ? `${Math.round(stats.onTimeRate * 100)}%` : '0%'}
+                      </p>
+                    </div>
+                    <div className="bg-purple-50 p-6 rounded-lg">
+                      <h4 className="text-sm font-medium text-purple-800 uppercase tracking-wider">Total Revenue</h4>
+                      <p className="mt-2 text-3xl font-semibold text-gray-900">
+                        {stats.totalRevenue ? stats.totalRevenue.toLocaleString() : '0'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

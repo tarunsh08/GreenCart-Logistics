@@ -5,6 +5,10 @@ import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import SimulationPage from './pages/SimulationPage';
+import OrdersManagement from './pages/OrdersManagement';
+import RoutesManagement from './pages/RoutesManagement';
+import DriversManagement from './pages/DriversManagement';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -38,6 +42,38 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/simulation" 
+                element={
+                  <ProtectedRoute>
+                    <SimulationPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/orders" 
+                element={
+                  <ProtectedRoute>
+                    <OrdersManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/routes" 
+                element={
+                  <ProtectedRoute>
+                    <RoutesManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/drivers" 
+                element={
+                  <ProtectedRoute>
+                    <DriversManagement />
                   </ProtectedRoute>
                 } 
               />
