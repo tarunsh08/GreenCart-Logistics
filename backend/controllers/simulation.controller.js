@@ -85,3 +85,94 @@ export const getSimulationHistory = async (req, res) => {
         return res.status(500).json({ error: "Internal server error" });
     }
 };
+
+export const getSimulationStats = async (req, res) => {
+    try {
+        // Get all simulation results
+        const simulations = await SimulationResult.find()
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .lean();
+        
+        if (!simulations || simulations.length === 0) {
+            // Return default values if no simulations exist yet
+            return res.json({
+                totalProfit: 0,
+                efficiencyScore: 0,
+                onTime: 0,
+                late: 0,
+                fuelCosts: {},
+                lastUpdated: new Date()
+            });
+        }
+
+        // Use the latest simulation
+        const latestSimulation = simulations[0];
+        
+        // If we have orders, calculate stats from them
+        if (latestSimulation.orders && latestSimulation.orders.length > 0) {
+            // Calculate total profit
+            const totalProfit = latestSimulation.orders.reduce((sum, order) => {
+                const revenue = order.revenue || 0;
+                const cost = order.cost || 0;
+                return sum + (revenue - cost);
+            }, 0);
+
+            // Calculate efficiency score (percentage of on-time deliveries)
+            const totalOrders = latestSimulation.orders.length;
+            const onTimeDeliveries = latestSimulation.orders.filter(
+                order => order.status === 'Delivered' && !order.isLate
+            ).length;
+            const efficiencyScore = Math.round((onTimeDeliveries / totalOrders) * 100) || 0;
+            const lateDeliveries = totalOrders - onTimeDeliveries;
+
+            // Calculate fuel cost breakdown
+            const fuelCosts = latestSimulation.orders.reduce((acc, order) => {
+                const vehicleType = order.vehicleType || 'Standard';
+                const cost = order.fuelCost || 0;
+                acc[vehicleType] = (acc[vehicleType] || 0) + cost;
+                return acc;
+            }, {});
+
+            // Prepare response
+            const stats = {
+                totalProfit,
+                efficiencyScore,
+                onTime: onTimeDeliveries,
+                late: lateDeliveries,
+                fuelCosts,
+                lastUpdated: latestSimulation.updatedAt || latestSimulation.createdAt || new Date()
+            };
+
+            return res.json(stats);
+        } 
+        // If no orders but we have kpis in the simulation, use those
+        else if (latestSimulation.kpis) {
+            return res.json({
+                totalProfit: (latestSimulation.kpis.totalRevenue || 0) - (latestSimulation.kpis.totalCost || 0),
+                efficiencyScore: latestSimulation.kpis.efficiencyScore || 0,
+                onTime: latestSimulation.summary?.onTimeDeliveries || 0,
+                late: latestSimulation.summary?.lateDeliveries || 0,
+                fuelCosts: latestSimulation.fuelCosts || {},
+                lastUpdated: latestSimulation.updatedAt || latestSimulation.createdAt || new Date()
+            });
+        }
+        // Fallback to empty values
+        else {
+            return res.json({
+                totalProfit: 0,
+                efficiencyScore: 0,
+                onTime: 0,
+                late: 0,
+                fuelCosts: {},
+                lastUpdated: new Date()
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching simulation stats:', error);
+        res.status(500).json({ 
+            error: 'Failed to fetch simulation statistics',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+};
