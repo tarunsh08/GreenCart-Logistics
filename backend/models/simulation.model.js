@@ -1,20 +1,22 @@
 import mongoose from "mongoose";
 
-const SimulationSchema = new mongoose.Schema({
-    timestamp: { 
-        type: Date, 
-        default: Date.now 
-    },
-    inputs: { 
-        type: Object, 
-        required: true 
-    },
-    results: { 
-        type: Object, 
-        required: true 
-    }  
+const SimulationResultSchema = new mongoose.Schema({
+  kpis: {
+    avgDeliveryTime: Number,
+    onTimePercentage: Number,
+    fuelConsumption: Number,
+    totalOrders: Number
+  },
+  summary: {
+    totalDrivers: Number,
+    totalRoutes: Number,
+    totalOrders: Number
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    index: true 
+  }
 });
 
-const Simulation = mongoose.model('Simulation', SimulationSchema);
-
-export default Simulation;
+export default mongoose.model("SimulationResult", SimulationResultSchema);
