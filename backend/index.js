@@ -19,7 +19,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: "https://green-cart-logistics-phi.vercel.app",
     credentials: true
 }));
 app.use(express.json());
