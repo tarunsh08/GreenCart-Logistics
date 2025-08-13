@@ -39,7 +39,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/api/simulation/stats', {
+        const res = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/simulation/stats`, {
           withCredentials: true
         });
         setStats(res.data);

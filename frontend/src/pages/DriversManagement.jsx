@@ -15,7 +15,7 @@ export default function DriversManagement() {
   const fetchDrivers = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/drivers", {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/drivers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -55,7 +55,7 @@ export default function DriversManagement() {
     try {
       let res;
       if (form.id) {
-        res = await fetch(`http://localhost:3000/api/drivers/${form.id}`, {
+        res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/drivers/${form.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -64,7 +64,7 @@ export default function DriversManagement() {
           body: JSON.stringify(body),
         });
       } else {
-        res = await fetch("http://localhost:3000/api/drivers", {
+        res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/drivers`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -94,7 +94,7 @@ export default function DriversManagement() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this driver?")) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/drivers/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/drivers/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -142,7 +142,7 @@ export default function DriversManagement() {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="John Doe"
+                    placeholder="Driver Name"
                   />
                 </div>
 

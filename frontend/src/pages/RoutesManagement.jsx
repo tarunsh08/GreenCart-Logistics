@@ -10,19 +10,26 @@ export default function RoutesManagement() {
     route_id: "",
     distance_km: "",
     traffic_level: "Low",
-    base_time: "",
+    base_time_min: "",
   });
 
   const fetchRoutes = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/routes", {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/routes`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to load routes");
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load routes");
       setRoutes(data);
+      setError("");
     } catch (err) {
+      console.error("Fetch routes error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -34,7 +41,11 @@ export default function RoutesManagement() {
   }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const resetForm = () => {
@@ -43,47 +54,66 @@ export default function RoutesManagement() {
       route_id: "",
       distance_km: "",
       traffic_level: "Low",
-      base_time: "",
+      base_time_min: "",
     });
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    
+    const routeId = form.route_id ? String(form.route_id).trim() : "";
+    
+    if (!routeId) {
+      setError("Route ID is required");
+      return;
+    }
+    
+    if (isNaN(form.distance_km) || form.distance_km <= 0) {
+      setError("Distance must be a positive number");
+      return;
+    }
+    
+    if (isNaN(form.base_time_min) || form.base_time_min <= 0) {
+      setError("Base time must be a positive number");
+      return;
+    }
+
     const body = {
-      route_id: form.route_id,
-      distance_km: Number(form.distance_km),
+      route_id: routeId,  
+      distance_km: parseFloat(form.distance_km),
       traffic_level: form.traffic_level,
-      base_time: Number(form.base_time),
+      base_time_min: parseInt(form.base_time_min),
     };
 
     try {
-      let res;
-      if (form.id) {
-        res = await fetch(`http://localhost:3000/api/routes/${form.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(body),
-        });
-      } else {
-        res = await fetch("http://localhost:3000/api/routes", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(body),
-        });
-      }
+      const url = form.id 
+        ? `${import.meta.env.VITE_SERVER_URL}/api/routes/${form.id}`
+        : `${import.meta.env.VITE_SERVER_URL}/api/routes`;
+      
+      const method = form.id ? "PUT" : "POST";
+      
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save route");
+      
+      if (!res.ok) {
+        throw new Error(data.error || data.message || "Failed to save route");
+      }
+      
       resetForm();
-      fetchRoutes();
+      await fetchRoutes(); // Wait for refresh to complete
     } catch (err) {
-      setError(err.message);
+      console.error("Submit error:", err);
+      setError(err.message || "An error occurred while saving the route");
     }
   };
 
@@ -91,24 +121,30 @@ export default function RoutesManagement() {
     setForm({
       id: route._id,
       route_id: route.route_id,
-      distance_km: route.distance_km,
+      distance_km: route.distance_km.toString(),
       traffic_level: route.traffic_level,
-      base_time: route.base_time,
+      base_time_min: route.base_time_min.toString(),
     });
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this route?")) return;
+    
     try {
-      const res = await fetch(`http://localhost:3000/api/routes/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/routes/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete route");
-      fetchRoutes();
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to delete route");
+      }
+      
+      await fetchRoutes(); // Wait for refresh to complete
     } catch (err) {
-      setError(err.message);
+      console.error("Delete error:", err);
+      setError(err.message || "An error occurred while deleting the route");
     }
   };
 
@@ -168,7 +204,7 @@ export default function RoutesManagement() {
                     name="distance_km"
                     value={form.distance_km}
                     onChange={handleChange}
-                    min="0"
+                    min="0.1"
                     step="0.1"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -194,10 +230,10 @@ export default function RoutesManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Base Time (minutes)</label>
                   <input
                     type="number"
-                    name="base_time"
-                    value={form.base_time}
+                    name="base_time_min"
+                    value={form.base_time_min}
                     onChange={handleChange}
-                    min="0"
+                    min="1"
                     required
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g., 45"
@@ -244,7 +280,7 @@ export default function RoutesManagement() {
                     {routes.length === 0 ? (
                       <tr>
                         <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                          No routes found. Add your first route to get started.
+                          {loading ? "Loading..." : "No routes found. Add your first route to get started."}
                         </td>
                       </tr>
                     ) : (
@@ -262,7 +298,7 @@ export default function RoutesManagement() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {route.base_time} min
+                            {route.base_time_min} min
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                             <button

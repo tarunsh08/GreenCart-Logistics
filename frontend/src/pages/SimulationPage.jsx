@@ -26,7 +26,7 @@ export default function SimulationPage() {
     setResults(null);
 
     try {
-      const res = await fetch("http://localhost:3000/api/simulation/run", {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/simulation/run`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

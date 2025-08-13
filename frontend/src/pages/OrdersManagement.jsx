@@ -17,7 +17,7 @@ export default function OrdersManagement() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:3000/api/orders", {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/orders`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -32,7 +32,7 @@ export default function OrdersManagement() {
 
   const fetchRoutes = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/routes", {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/routes`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -77,8 +77,8 @@ export default function OrdersManagement() {
     try {
       let res;
       const url = form.id 
-        ? `http://localhost:3000/api/orders/${form.id}`
-        : 'http://localhost:3000/api/orders';
+        ? `${import.meta.env.VITE_SERVER_URL}/api/orders/${form.id}`
+        : `${import.meta.env.VITE_SERVER_URL}/api/orders`;
       
       console.log(`Making ${form.id ? 'PUT' : 'POST'} request to:`, url);
       
@@ -120,7 +120,7 @@ export default function OrdersManagement() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/orders/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/orders/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -143,14 +143,35 @@ export default function OrdersManagement() {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    
+    try {
+      let date = new Date(dateString);
+      
+      if (isNaN(date.getTime())) {
+        date = new Date(parseInt(dateString));
+      }
+      
+      if (isNaN(date.getTime())) {
+        const normalizedString = dateString.replace('Z', '').replace('T', ' ');
+        date = new Date(normalizedString);
+      }
+      
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+      
+      return date.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return 'Invalid Date';
+    }
   };
 
   return (

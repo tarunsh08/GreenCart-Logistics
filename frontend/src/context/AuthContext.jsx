@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
           // Verify token with backend
-          const res = await axios.get('http://localhost:3000/api/auth/me');
+          const res = await axios.get(`${import.meta.env.VITE_SERVER_URL}/api/auth/me`);
           setUser(res.data.user);
         }
       } catch (error) {
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const res = await axios.post('http://localhost:3000/api/auth/login', { username, password });
+      const res = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/login`, { username, password });
       
       if (res.data.token) {
         // Store the token
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (userData) => {
     try {
-      const res = await axios.post('http://localhost:3000/api/auth/signup', userData);
+      const res = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/signup`, userData);
       
       if (res.data.token) {
         // Store the token
